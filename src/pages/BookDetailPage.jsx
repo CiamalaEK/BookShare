@@ -12,7 +12,7 @@ const getStatusClass = (status = '') => {
   return 'status-info';
 };
 
-export default function BookDetailPage({ user, books, requests, holds, onRequest, onHold }) {
+export default function BookDetailPage({ user, books, requests, holds, onRequest }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const book = books.find((item) => Number(item.id) === Number(id));
@@ -60,13 +60,7 @@ export default function BookDetailPage({ user, books, requests, holds, onRequest
             >
               {requestStatus ? formatStatus(requestStatus.status) : 'Request this book'}
             </button>
-            <button
-              className="secondary"
-              onClick={() => onHold(book.id)}
-              disabled={!user || Number(book.ownerId) === Number(user.id) || !!holdStatus}
-            >
-              {holdStatus ? `Queued #${holdStatus.queuePosition}` : 'Join hold queue'}
-            </button>
+            {holdStatus && <span className="helper-text">Queued #{holdStatus.queuePosition}</span>}
           </div>
         </div>
       </div>

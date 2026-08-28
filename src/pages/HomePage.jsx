@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function HomePage({ user, books, requests, holds, onRequest, onHold, onAddBook, onImportBookBuddy }) {
+export default function HomePage({ user, books, requests, holds, onRequest, onAddBook, onImportBookBuddy }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [showAddBook, setShowAddBook] = useState(false);
@@ -211,13 +211,6 @@ export default function HomePage({ user, books, requests, holds, onRequest, onHo
                     disabled={!user || Number(book.ownerId) === Number(user.id) || !!requestState}
                   >
                     {requestState ? formatStatus(requestState) : 'Request'}
-                  </button>
-                  <button
-                    className="secondary"
-                    onClick={() => onHold(book.id)}
-                    disabled={!user || Number(book.ownerId) === Number(user.id) || !!holdPosition}
-                  >
-                    {holdPosition ? `Queue #${holdPosition}` : 'Place hold'}
                   </button>
                   <button className="secondary" onClick={() => navigate(`/books/${book.id}`)}>View details</button>
                 </div>

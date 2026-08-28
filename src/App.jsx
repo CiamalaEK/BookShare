@@ -13,6 +13,12 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 const API_BASE_URL = 'https://booksharebackend-production.up.railway.app';
 const API_URL = `${API_BASE_URL}/api`;
 
+const resolveImageUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  return `${API_BASE_URL}${value.startsWith('/') ? value : `/${value}`}`;
+};
+
 const authHeaders = (token = localStorage.getItem('bookshare-token')) => ({
   Authorization: `Bearer ${token}`,
   'Content-Type': 'application/json'
@@ -23,7 +29,7 @@ const normalizeBook = (book = {}) => ({
   id: Number(book.id),
   ownerId: book.ownerId ?? book.owner_id,
   ownerName: book.ownerName ?? book.owner_name ?? 'Unknown',
-  imageUrl: book.imageUrl ?? book.image_url ?? '',
+  imageUrl: resolveImageUrl(book.imageUrl ?? book.image_url ?? ''),
   sharingType: book.sharingType ?? book.sharing_type ?? 'lend',
   condition: book.condition ?? book.condition_name ?? 'Good',
   dueDate: book.dueDate ?? book.due_date,
@@ -149,25 +155,6 @@ function App() {
     await loadData();
   };
 
-  const placeHold = async (bookId) => {
-    if (!user || !token) return;
-
-    const response = await fetch(`${API_URL}/holds`, {
-      method: 'POST',
-      headers: authHeaders(token),
-      body: JSON.stringify({ bookId, userId: user.id })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      setFlash({ type: 'error', text: data.message || 'Unable to place hold.' });
-      return;
-    }
-
-    setFlash({ type: 'success', text: `Your hold has been queued successfully. Position: #${data.queue_position || 1}.` });
-    await loadData();
-  };
-
   const fulfillHold = async (holdId) => {
     if (!user || !token) return;
 
@@ -258,8 +245,8 @@ function App() {
     <Layout user={user} onLogout={handleLogout} flash={flash}>
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <AuthPage onLogin={handleLogin} />} />
-        <Route path="/" element={<HomePage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} onHold={placeHold} onAddBook={addBook} onImportBookBuddy={importBookBuddyData} />} />
-        <Route path="/books/:id" element={<BookDetailPage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} onHold={placeHold} />} />
+        <Route path="/" element={<HomePage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} onAddBook={addBook} onImportBookBuddy={importBookBuddyData} />} />
+        <Route path="/books/:id" element={<BookDetailPage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} />} />
         <Route path="/my-books" element={<MyBooksPage user={user} books={books} />} />
         <Route path="/requests" element={<RequestsPage user={user} requests={requests} holds={holds} onUpdateStatus={updateRequestStatus} onMarkReturned={markReturned} onFulfillHold={fulfillHold} />} />
         <Route path="/notifications" element={<NotificationsPage notifications={alerts} user={user} />} />
