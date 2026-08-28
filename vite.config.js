@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         // target: 'http://localhost:5001',
-        target : 'https://booksharebackend-production.up.railway.app/'
+        target : 'https://booksharebackend-production.up.railway.app/',
         changeOrigin: true
       }
     }
