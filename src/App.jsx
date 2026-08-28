@@ -10,7 +10,8 @@ import RequestsPage from './pages/RequestsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 
-const API_URL = '/api';
+const API_BASE_URL = 'https://booksharebackend-production.up.railway.app';
+const API_URL = `${API_BASE_URL}/api`;
 
 const authHeaders = (token = localStorage.getItem('bookshare-token')) => ({
   Authorization: `Bearer ${token}`,

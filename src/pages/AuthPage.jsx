@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
-const API_URL = '/api';
+const API_BASE_URL = 'https://booksharebackend-production.up.railway.app';
+const API_URL = `${API_BASE_URL}/api`;
 
 export default function AuthPage({ onLogin }) {
   const [mode, setMode] = useState('login');

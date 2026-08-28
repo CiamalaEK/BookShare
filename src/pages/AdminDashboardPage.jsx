@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
-const API_URL = '/api';
+const API_BASE_URL = 'https://booksharebackend-production.up.railway.app';
+const API_URL = `${API_BASE_URL}/api`;
 
 export default function AdminDashboardPage({ user }) {
   const [summary, setSummary] = useState({
