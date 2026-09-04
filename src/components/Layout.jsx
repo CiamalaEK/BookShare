@@ -15,6 +15,7 @@ export default function Layout({ user, onLogout, flash, children }) {
         <nav className="nav">
           <NavLink to="/">Browse</NavLink>
           {user && <NavLink to="/my-books">My Books</NavLink>}
+          {user && <NavLink to="/wishlist">Wishlist</NavLink>}
           {user && <NavLink to="/requests">Requests</NavLink>}
           {user && <NavLink to="/notifications">Alerts</NavLink>}
           {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}

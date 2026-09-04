@@ -9,6 +9,7 @@ import MyBooksPage from './pages/MyBooksPage';
 import RequestsPage from './pages/RequestsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import WishlistPage from './pages/WishlistPage';
 
 const API_BASE_URL = 'https://booksharebackend-production.up.railway.app';
 const API_URL = `${API_BASE_URL}/api`;
@@ -73,6 +74,8 @@ function App() {
   const [requests, setRequests] = useState([]);
   const [holds, setHolds] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [shelves, setShelves] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [flash, setFlash] = useState(null);
 
   const loadData = async () => {
@@ -84,19 +87,25 @@ function App() {
       return;
     }
 
-    const [booksResponse, requestsResponse, alertsResponse, holdsResponse] = await Promise.all([
+    const [booksResponse, shelvesResponse, wishlistResponse, requestsResponse, alertsResponse, holdsResponse] = await Promise.all([
       fetch(`${API_URL}/books`, { headers: authHeaders(token) }),
+      fetch(`${API_URL}/shelves`, { headers: authHeaders(token) }),
+      fetch(`${API_URL}/wishlist`, { headers: authHeaders(token) }),
       fetch(`${API_URL}/requests`, { headers: authHeaders(token) }),
       fetch(`${API_URL}/alerts`, { headers: authHeaders(token) }),
       fetch(`${API_URL}/holds`, { headers: authHeaders(token) })
     ]);
 
     const booksData = await booksResponse.json();
+    const shelvesData = await shelvesResponse.json().catch(() => []);
+    const wishlistData = await wishlistResponse.json().catch(() => []);
     const requestsData = await requestsResponse.json();
     const alertsData = await alertsResponse.json();
     const holdsData = await holdsResponse.json();
 
     setBooks(Array.isArray(booksData) ? booksData.map(normalizeBook) : []);
+    setShelves(Array.isArray(shelvesData) ? shelvesData.map((s) => ({ ...s, id: Number(s.id) })) : []);
+    setWishlist(Array.isArray(wishlistData) ? wishlistData.map(normalizeBook) : []);
     setRequests(Array.isArray(requestsData) ? requestsData.map(normalizeRequest) : []);
     setNotifications(Array.isArray(alertsData) ? alertsData.map(normalizeNotification) : []);
     setHolds(Array.isArray(holdsData) ? holdsData.map(normalizeHold) : []);
@@ -241,13 +250,53 @@ function App() {
     throw new Error(created.message || 'Unable to add book');
   };
 
+  const createShelf = async ({ name, description, bookIds = [] }) => {
+    if (!user || !token) return null;
+    const response = await fetch(`${API_URL}/shelves`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ name, description, bookIds })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Unable to create shelf');
+    await loadData();
+    return data;
+  };
+
+  const toggleWishlist = async ({ bookId, add }) => {
+    if (!user || !token) return null;
+    const response = await fetch(`${API_URL}/wishlist`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ bookId, add })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Unable to update wishlist');
+    setWishlist(Array.isArray(data) ? data.map(normalizeBook) : []);
+    return data;
+  };
+
+  const toggleBookShelf = async ({ shelfId, bookId, add }) => {
+    if (!user || !token) return null;
+    const response = await fetch(`${API_URL}/shelves/${shelfId}/books`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ bookId, add })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Unable to update shelf');
+    await loadData();
+    return data;
+  };
+
   return (
     <Layout user={user} onLogout={handleLogout} flash={flash}>
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <AuthPage onLogin={handleLogin} />} />
-        <Route path="/" element={<HomePage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} onAddBook={addBook} onImportBookBuddy={importBookBuddyData} />} />
-        <Route path="/books/:id" element={<BookDetailPage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} />} />
-        <Route path="/my-books" element={<MyBooksPage user={user} books={books} />} />
+        <Route path="/" element={<HomePage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} onAddBook={addBook} onImportBookBuddy={importBookBuddyData} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
+        <Route path="/books/:id" element={<BookDetailPage user={user} books={books} requests={requests} holds={holds} onRequest={requestBook} shelves={shelves} onToggleShelf={toggleBookShelf} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
+        <Route path="/my-books" element={<MyBooksPage user={user} books={books} shelves={shelves} onCreateShelf={createShelf} onToggleShelf={toggleBookShelf} wishlist={wishlist} onToggleWishlist={toggleWishlist} />} />
+        <Route path="/wishlist" element={<WishlistPage user={user} books={wishlist} onToggleWishlist={toggleWishlist} wishlist={wishlist} />} />
         <Route path="/requests" element={<RequestsPage user={user} requests={requests} holds={holds} onUpdateStatus={updateRequestStatus} onMarkReturned={markReturned} onFulfillHold={fulfillHold} />} />
         <Route path="/notifications" element={<NotificationsPage notifications={alerts} user={user} />} />
         <Route path="/admin" element={<AdminDashboardPage user={user} />} />
