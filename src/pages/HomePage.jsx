@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import IsbnScanner from '../components/IsbnScanner';
 import { useNavigate } from 'react-router-dom';
 
 export default function HomePage({ user, books, requests, holds, onRequest, onAddBook, onImportBookBuddy, wishlist = [], onToggleWishlist }) {
@@ -10,6 +11,7 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
   const [activeFilter, setActiveFilter] = useState('');
   const [category, setCategory] = useState('All');
   const [showAddBook, setShowAddBook] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [bookBuddyImport, setBookBuddyImport] = useState('');
@@ -32,6 +34,27 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
   });
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
+
+  const fetchIsbnMetadata = async (isbn) => {
+    if (!isbn) return;
+    try {
+      const clean = String(isbn).replace(/[^0-9Xx]/g, '');
+      const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${clean}&format=json&jscmd=data`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const key = `ISBN:${clean}`;
+      const info = data[key];
+      if (info) {
+        const title = info.title || '';
+        const author = Array.isArray(info.authors) ? info.authors.map(a => a.name).join(', ') : '';
+        const publisher = Array.isArray(info.publishers) ? info.publishers.map(p => p.name).join(', ') : '';
+        const cover = info.cover ? (info.cover.large || info.cover.medium || info.cover.small) : null;
+        setForm((f) => ({ ...f, title: f.title || title, author: f.author || author, publisher: f.publisher || publisher, imageUrl: cover || f.imageUrl }));
+      }
+    } catch (e) {
+      // ignore lookup failures
+    }
+  };
 
   useEffect(() => {
     setForm((current) => ({ ...current, location: user?.city || current.location || 'Bengaluru' }));
@@ -250,7 +273,10 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
           <div className="panel-grid">
             <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Title" required />
             <input value={form.author} onChange={(event) => setForm({ ...form, author: event.target.value })} placeholder="Author" required />
-            <input value={form.isbn} onChange={(event) => setForm({ ...form, isbn: event.target.value })} placeholder="ISBN" />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input style={{ flex: 1 }} value={form.isbn} onChange={(event) => setForm({ ...form, isbn: event.target.value })} placeholder="ISBN" />
+              <button type="button" className="secondary" onClick={() => setShowScanner(true)}>Scan ISBN</button>
+            </div>
             <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
               <option>Fiction</option>
               <option>Classic</option>
@@ -274,6 +300,17 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
           </div>
           <button type="submit">Save Book</button>
         </form>
+      )}
+
+      {showScanner && (
+        <IsbnScanner
+          onDetected={(isbn) => {
+            setForm((f) => ({ ...f, isbn }));
+            setShowScanner(false);
+            fetchIsbnMetadata(isbn);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
       )}
 
       <div className="toolbar">

@@ -781,6 +781,15 @@ textarea {
 }
 .shelf-more { color: var(--muted); font-size: 0.85rem; }
 
+/* ISBN scanner styles */
+.isbn-scanner-overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(2,6,23,0.6); z-index: 120; }
+.isbn-scanner-card { width: min(420px, 96%); border-radius: 12px; overflow: hidden; background: linear-gradient(180deg, #0b2545, #0f172a); padding: 10px; box-shadow: 0 20px 60px rgba(2,6,23,0.6); position: relative; }
+.isbn-scanner-video { width: 100%; height: auto; border-radius: 8px; background: #000; display: block; }
+.isbn-scan-close { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.06); color: white; border: 1px solid rgba(255,255,255,0.12); padding: 6px 10px; border-radius: 8px; }
+.isbn-scan-hint, .isbn-scan-error { margin-top: 8px; color: #fff; font-size: 0.92rem; text-align: center; }
+.isbn-scan-hint { opacity: 0.9; }
+.isbn-scan-error { color: #ffb4b4; }
+
 /* make panel form neutral so the table-card stands out */
 .panel-form { background: transparent; padding: 0; border-radius: 10px; box-shadow: none; }
 .panel-form h4 { margin: 0 0 8px 0; }
