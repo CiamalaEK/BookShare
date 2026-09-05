@@ -12,6 +12,7 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
   const [category, setCategory] = useState('All');
   const [showAddBook, setShowAddBook] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [scannerTarget, setScannerTarget] = useState('form');
   const [showImport, setShowImport] = useState(false);
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [bookBuddyImport, setBookBuddyImport] = useState('');
@@ -275,7 +276,7 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
             <input value={form.author} onChange={(event) => setForm({ ...form, author: event.target.value })} placeholder="Author" required />
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <input style={{ flex: 1 }} value={form.isbn} onChange={(event) => setForm({ ...form, isbn: event.target.value })} placeholder="ISBN" />
-              <button type="button" className="secondary" onClick={() => setShowScanner(true)}>Scan ISBN</button>
+              <button type="button" className="secondary" onClick={() => { setScannerTarget('form'); setShowScanner(true); }}>Scan ISBN</button>
             </div>
             <select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
               <option>Fiction</option>
@@ -305,9 +306,13 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
       {showScanner && (
         <IsbnScanner
           onDetected={(isbn) => {
-            setForm((f) => ({ ...f, isbn }));
+            if (scannerTarget === 'form') {
+              setForm((f) => ({ ...f, isbn }));
+              fetchIsbnMetadata(isbn);
+            } else if (scannerTarget === 'adv') {
+              setAdv((a) => ({ ...a, isbn }));
+            }
             setShowScanner(false);
-            fetchIsbnMetadata(isbn);
           }}
           onClose={() => setShowScanner(false)}
         />
@@ -330,7 +335,10 @@ export default function HomePage({ user, books, requests, holds, onRequest, onAd
           <div className="panel-grid">
             <input placeholder="Title" value={adv.title} onChange={(e) => setAdv({ ...adv, title: e.target.value })} />
             <input placeholder="Author" value={adv.author} onChange={(e) => setAdv({ ...adv, author: e.target.value })} />
-            <input placeholder="ISBN" value={adv.isbn} onChange={(e) => setAdv({ ...adv, isbn: e.target.value })} />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input placeholder="ISBN" value={adv.isbn} onChange={(e) => setAdv({ ...adv, isbn: e.target.value })} />
+              <button type="button" className="secondary" onClick={() => { setScannerTarget('adv'); setShowScanner(true); }}>Scan</button>
+            </div>
             {/* <input placeholder="Category / Genre" value={adv.genre} onChange={(e) => setAdv({ ...adv, genre: e.target.value })} /> */}
             {/* <input placeholder="Publisher" value={adv.publisher} onChange={(e) => setAdv({ ...adv, publisher: e.target.value })} /> */}
             <input placeholder="Language" value={adv.language} onChange={(e) => setAdv({ ...adv, language: e.target.value })} />
